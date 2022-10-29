@@ -9,6 +9,7 @@ const elInput = document.querySelector(".form-header__input");
 const cardItem = document.querySelector(".card-item");
 const bookmarkNum = document.querySelector(".basket-num");
 const basketList = document.querySelector(".basket-list");
+const selectItem = document.querySelectorAll(".book-filter__item");
 
 let lenguageArr = [];
 let bookmarkArr = [];
@@ -156,3 +157,68 @@ basketList.addEventListener("click", function (evt) {
   }
   bookmarkNum.textContent = bookmarkArr.length;
 });
+
+selectItem.forEach((item) => {
+  item.addEventListener("click", function (evt) {
+    const value = item.dataset.value;
+    if (value === "a-z") {
+      sortAZ(filteredArr);
+    } else if (value === "z-a") {
+      sortZA(filteredArr);
+    } else if (value === "tohighpage") {
+      sortToHighPage(filteredArr);
+    } else if (value === "tolowpage") {
+      sortToLowPage(filteredArr);
+    } else if (value === "tohighyear") {
+      sortToHighYear(filteredArr);
+    } else if (value === "tolowyear") {
+      sortToLowYear(filteredArr);
+    }
+  });
+});
+
+const sortAZ = (arr) => {
+  let sortedArr = [...arr].sort((a, b) => {
+    if (a.title > b.title) {
+      return 1;
+    } else if (a.title < b.title) {
+      return -1;
+    } else {
+      return 0;
+    }
+  });
+  renderUI(sortedArr);
+};
+
+const sortZA = (arr) => {
+  let sortedArr = [...arr].sort((a, b) => {
+    if (a.title > b.title) {
+      return -1;
+    } else if (a.title < b.title) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+  renderUI(sortedArr);
+};
+
+const sortToHighPage = (arr) => {
+  let sorted = [...arr].sort((a, b) => a.pages - b.pages);
+  renderUI(sorted);
+};
+
+const sortToLowPage = (arr) => {
+  let sorted = [...arr].sort((a, b) => b.pages - a.pages);
+  renderUI(sorted);
+};
+
+const sortToHighYear = (arr) => {
+  let sorted = [...arr].sort((a, b) => a.year - b.year);
+  renderUI(sorted);
+};
+
+const sortToLowYear = (arr) => {
+  let sorted = [...arr].sort((a, b) => b.year - a.year);
+  renderUI(sorted);
+};
