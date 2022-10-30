@@ -10,13 +10,21 @@ const cardItem = document.querySelector(".card-item");
 const bookmarkNum = document.querySelector(".basket-num");
 const basketList = document.querySelector(".basket-list");
 const selectItem = document.querySelectorAll(".book-filter__item");
+const pageList = document.querySelector(".pagination-list");
+
+let filtered = [];
+books = books.map((item) => {
+  item.id = `id${Math.random()}`;
+  if (item.year < 0) {
+    item.year = -1 * item.year;
+  }
+  return item;
+});
 
 let lenguageArr = [];
 let bookmarkArr = [];
-let filteredArr = books;
-let filter = false;
-let selected = false;
-let id = 0;
+let languageValue = "All";
+
 const lenFragment = new DocumentFragment();
 const cardFragment = new DocumentFragment();
 
@@ -40,14 +48,19 @@ const createLanguageList = function () {
 
 createLanguageList();
 
+const languageAll = document.querySelectorAll(".books__lenguage-item");
+
 function renderUI(arr) {
   cardList.innerHTML = "";
 
   if (arr.length === 0) {
-    alert("Sorry, there is no this kind of books");
+    const newTitle = document.createElement("h3");
+    newTitle.textContent = "There is no movie in this filter";
+    newTitle.setAttribute("class", "error");
+    cardList.append(newTitle);
   }
 
-  arr.forEach((item, index) => {
+  arr.slice(0, 10).forEach((item) => {
     const template = elTemplate.cloneNode(true);
 
     template.querySelector(".card-img").src = item.imageLink;
@@ -58,7 +71,7 @@ function renderUI(arr) {
     template.querySelector(".card-page").textContent = item.pages;
     template.querySelector(".card-leguage").textContent = item.language;
     template.querySelector(".card-wikipedia").href = item.link;
-    template.querySelector(".card-basket").dataset.bookmarkId = index + 1;
+    template.querySelector(".card-basket").dataset.bookmarkId = item.id;
     cardFragment.appendChild(template);
   });
   cardList.appendChild(cardFragment);
@@ -72,57 +85,23 @@ filterSelect.addEventListener("click", function () {
 languageItem.addEventListener("click", function (evt) {
   if (evt.target.matches(".books__lenguage-item")) {
     const language = evt.target.textContent.split(" ").slice(0, -1).join(" ");
-    if (language === "All") {
-      renderUI(books);
-    } else {
-      if (filter) {
-        renderUI(filteredArr.filter((item) => item.language == language));
-      } else {
-        filteredArr = books.filter((item) => item.language == language);
-        selected = true;
-        renderUI(filteredArr);
-      }
-    }
+    languageValue = language;
+    filterAllCase();
+    languageAll.forEach((item) => {
+      item.classList.remove("selected");
+    });
+    evt.target.classList.add("selected");
   }
 });
 
 elForm.addEventListener("submit", function (evt) {
   evt.preventDefault();
-  const inputValue = elInput.value.trim();
-  const regex = new RegExp(inputValue, "gi");
-  if (selected) {
-    renderUI(
-      filteredArr.filter((item) => {
-        return item.title.match(regex);
-      })
-    );
-  } else {
-    filteredArr = books.filter((item) => {
-      return item.title.match(regex);
-    });
-    filter = true;
-    renderUI(filteredArr);
-  }
-});
-
-cardList.addEventListener("click", function (evt) {
-  if (evt.target.matches(".card-basket")) {
-    const id = evt.target.dataset.bookmarkId;
-    const index = bookmarkArr.indexOf(books[id - 1]);
-    if (!bookmarkArr.includes(books[id - 1])) {
-      bookmarkArr.push(books[id - 1]);
-    } else {
-      bookmarkArr.splice(index, 1);
-    }
-    evt.target.classList.toggle("bg-orange");
-    bookmarkNum.textContent = bookmarkArr.length;
-    basketRender(bookmarkArr);
-  }
+  filterAllCase();
 });
 
 function basketRender(arr) {
   basketList.innerHTML = "";
-  arr.forEach((item, index) => {
+  arr.forEach((item) => {
     // create element
     const newLi = document.createElement("li");
     const newImg = document.createElement("img");
@@ -134,7 +113,7 @@ function basketRender(arr) {
     newImg.setAttribute("class", "basket-img");
     newP.setAttribute("class", "basket-text");
     newBtn.setAttribute("class", "basket-btn");
-    newBtn.dataset.id = index;
+    newBtn.dataset.id = item.id;
     newImg.src = item.imageLink;
     newImg.width = "40";
     newImg.height = "40";
@@ -145,14 +124,35 @@ function basketRender(arr) {
     basketList.appendChild(newLi);
   });
 }
+const bookBasket = document.querySelectorAll(".card-basket");
 
-const basketBtn = document.querySelectorAll(".card-basket");
+cardList.addEventListener("click", function (evt) {
+  if (evt.target.matches(".card-basket")) {
+    const id = evt.target.dataset.bookmarkId;
+    const item = books.find((item) => item.id == id);
+    const index = bookmarkArr.indexOf(item);
+    if (!bookmarkArr.includes(item)) {
+      bookmarkArr.push(item);
+    } else {
+      bookmarkArr.splice(index, 1);
+    }
+    evt.target.classList.add("bg-orange");
+    setTimeout(function () {
+      evt.target.classList.remove("bg-orange");
+    }, 500);
+    console.log(evt.target);
+    bookmarkNum.textContent = bookmarkArr.length;
+    basketRender(bookmarkArr);
+    console.log(bookBasket);
+  }
+});
 
 basketList.addEventListener("click", function (evt) {
   if (evt.target.matches(".basket-btn")) {
     const id = evt.target.dataset.id;
-    basketBtn[books.indexOf(bookmarkArr[id])].classList.remove("bg-orange");
-    bookmarkArr.splice(id, 1);
+    const item = bookmarkArr.find((item) => item.id === id);
+    const index = bookmarkArr.indexOf(item);
+    bookmarkArr.splice(index, 1);
     basketRender(bookmarkArr);
   }
   bookmarkNum.textContent = bookmarkArr.length;
@@ -161,18 +161,25 @@ basketList.addEventListener("click", function (evt) {
 selectItem.forEach((item) => {
   item.addEventListener("click", function (evt) {
     const value = item.dataset.value;
+    const regex = new RegExp(elInput.value, "gi");
+    const filtered = books.filter((item) => {
+      return (
+        item.title.match(regex) &&
+        (languageValue == "All" || item.language.includes(languageValue))
+      );
+    });
     if (value === "a-z") {
-      sortAZ(filteredArr);
+      sortAZ(filtered);
     } else if (value === "z-a") {
-      sortZA(filteredArr);
+      sortZA(filtered);
     } else if (value === "tohighpage") {
-      sortToHighPage(filteredArr);
+      sortToHighPage(filtered);
     } else if (value === "tolowpage") {
-      sortToLowPage(filteredArr);
+      sortToLowPage(filtered);
     } else if (value === "tohighyear") {
-      sortToHighYear(filteredArr);
+      sortToHighYear(filtered);
     } else if (value === "tolowyear") {
-      sortToLowYear(filteredArr);
+      sortToLowYear(filtered);
     }
   });
 });
@@ -222,3 +229,44 @@ const sortToLowYear = (arr) => {
   let sorted = [...arr].sort((a, b) => b.year - a.year);
   renderUI(sorted);
 };
+
+const filterAllCase = () => {
+  const regex = new RegExp(elInput.value, "gi");
+  filtered = books.filter((item) => {
+    return (
+      item.title.match(regex) &&
+      (languageValue == "All" || item.language.includes(languageValue))
+    );
+  });
+
+  renderUI(filtered);
+  pagination(filtered);
+};
+
+pagination(books);
+
+function pagination(arr) {
+  pageList.innerHTML = "";
+
+  const pages = Math.ceil(arr.length / 10);
+  for (let page = 1; page <= pages; page++) {
+    const newLi = document.createElement("li");
+    const newBtn = document.createElement("button");
+
+    newLi.setAttribute("class", "pagination-item");
+    newBtn.setAttribute("class", "pagination-btn");
+    newBtn.textContent = page;
+
+    newLi.appendChild(newBtn);
+    pageList.appendChild(newLi);
+
+    newBtn.addEventListener("click", function (evt) {
+      const valuePage = Number(newBtn.textContent);
+      const pagedArr = (filtered.length === 0 ? books : filtered).slice(
+        (valuePage - 1) * 10,
+        valuePage * 10
+      );
+      renderUI(pagedArr);
+    });
+  }
+}

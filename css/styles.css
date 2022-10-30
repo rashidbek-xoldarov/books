@@ -359,10 +359,16 @@ body {
   cursor: pointer;
 }
 
-.books__lenguage-item:hover,
-.books__lenguage-item:active {
+.selected {
   color: #fff;
   background-color: #008dff;
+}
+
+.error {
+  position: absolute;
+  font-size: 45px;
+  line-height: 56px;
+  text-align: center;
 }
 
 .books__lenguage-item:not(:last-child) {
@@ -519,5 +525,36 @@ body {
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+  cursor: pointer;
+}
+
+.books__card {
+  min-width: 960px;
+}
+
+.bg-blue {
+  background-color: #008dff;
+}
+
+.pagination-list {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  list-style: none;
+  margin: 30px 0;
+  padding-left: 0;
+}
+
+.pagination-item {
+  margin-left: 10px;
+}
+
+.pagination-btn {
+  width: 32px;
+  height: 32px;
+  color: #008dff;
+  border: none;
+  border-radius: 8px;
+  background-color: #fff;
   cursor: pointer;
 }
